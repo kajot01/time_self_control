@@ -16,6 +16,8 @@ def start_sql_connection():
     return MARIADBIP
 
 
+def translate_time(t):
+    return str(t[0]) + ":" + str(t[1]) + ":00"
 
 
 class SQLConn:
@@ -25,33 +27,26 @@ class SQLConn:
         self.conn = mysql.connector.connect(host=self.MARIADBIP, port=port, user=user, passwd=passwd, db=db)
         self.init_db()
 
-
-    def make_date_record(self, d, t_start, t_stop, is_productive, duration):
+    def make_date_record(self, d, is_productive, t_start, t_stop,  duration):
         cur = self.conn.cursor(dictionary=False)
         cur.execute("SELECT EXISTS(SELECT * from days WHERE day=DATE(%s));",
                     params=(d,))
-        print("Czy istnieje: "+str(cur.fetchone()))
-        if not cur.fetchone():
 
+        if cur.fetchone() == (0,):
             cur.execute("INSERT INTO days (day) VALUES (%s);", params=(d,))
             print("Dodano nowy dzień: " + str(d))
 
         d_id = self.get_date_id(d)
         print("d_id: "+str(d_id))
         cur.execute("INSERT INTO times VALUES (%s,%s,TIME(%s),TIME(%s),%s)",
-                    params=(d_id, is_productive, t_start, t_stop, duration))
+                    params=(d_id, is_productive, translate_time(t_start), translate_time(t_stop), duration))
         self.conn.commit()
         cur.close()
-
-
-    # def make_time_record(self):
-
 
     def get_date_id(self, f_date):
         cur = self.conn.cursor(dictionary=True)
         command = "SELECT id FROM days WHERE day=DATE(%s);"
-        data = ("2023-12-06",)
-        cur.execute(command, data)
+        cur.execute(command, (f_date,))
         d_id = cur.fetchone()
         print("d_id in: "+str(d_id))
         cur.close()
