@@ -1,9 +1,10 @@
 from PySide6.QtWidgets import QWidget, QPushButton, QHBoxLayout, QGridLayout, QLabel, QFrame
 from PySide6.QtCore import Signal, Slot, Qt
 from data_manager import DataManager
+from warning_window import WarningWindow
 
 class MainWindow(QWidget):
-    def __init__(self, dm, parent=None):
+    def __init__(self, dm: DataManager, parent=None):
         super().__init__(parent)
         self.dm = dm
         self.setWindowTitle("Czas przy elektronice")
@@ -48,3 +49,5 @@ class MainWindow(QWidget):
     def stop_time(self):
         self.dm.stop_timer()
         print("Stop")
+
+
