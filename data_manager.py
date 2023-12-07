@@ -1,4 +1,4 @@
-from day_record import DayRecord
+
 from sql_connector import SQLConn
 from datetime import datetime
 
