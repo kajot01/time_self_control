@@ -17,7 +17,8 @@ def start_sql_connection():
 
 
 def translate_time(t):
-    return str(t[0]) + ":" + str(t[1]) + ":00"
+    return str(t[0]) + ":" + str(t[1])
+
 
 
 class SQLConn:
@@ -61,3 +62,15 @@ class SQLConn:
         cur.execute("USE time_counting;")
         self.conn.start_transaction(isolation_level='READ COMMITTED', readonly=False)
         self.conn.rollback()
+
+    def get_column(self, column, table, td):
+        cur = self.conn.cursor(dictionary=True)
+        d_id = self.get_date_id(td)
+        command = f"""SELECT {column} FROM {table} WHERE day_id={d_id};"""
+        cur.execute(command)
+        records = []
+        for row in cur.fetchall():
+            records.append(str(row[column]))
+        cur.close()
+        return records
+
