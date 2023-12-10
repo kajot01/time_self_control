@@ -35,13 +35,12 @@ class SQLConn:
 
         if cur.fetchone() == (0,):
             cur.execute("INSERT INTO days (day) VALUES (%s);", params=(d,))
-            print("Dodano nowy dzień: " + str(d))
 
         d_id = self.get_date_id(d)
-        print("d_id: "+str(d_id))
         cur.execute("INSERT INTO times VALUES (%s,%s,TIME(%s),TIME(%s),%s)",
                     params=(d_id, is_productive, translate_time(t_start), translate_time(t_stop), duration))
         self.conn.commit()
+        print("Dodano z powodzeniem nowy rekord")
         cur.close()
 
     def get_date_id(self, f_date):
@@ -49,10 +48,10 @@ class SQLConn:
         command = "SELECT id FROM days WHERE day=DATE(%s);"
         cur.execute(command, (f_date,))
         d_id = cur.fetchone()
-        print("d_id in: "+str(d_id))
+        self.conn.commit()
         cur.close()
         try:
-            num_id = d_id.get("id")
+            num_id = d_id["id"]
             return num_id
         except:
             print("Panie, mamy problem z tym gównem")
@@ -66,11 +65,38 @@ class SQLConn:
     def get_column(self, column, table, td):
         cur = self.conn.cursor(dictionary=True)
         d_id = self.get_date_id(td)
-        command = f"""SELECT {column} FROM {table} WHERE day_id={d_id};"""
-        cur.execute(command)
-        records = []
-        for row in cur.fetchall():
-            records.append(str(row[column]))
-        cur.close()
-        return records
+        if d_id is not None:
+            command = f"""SELECT {column} FROM {table} WHERE day_id={d_id};"""
+            cur.execute(command)
+            records = []
+            for row in cur.fetchall():
+                records.append(str(row[column]))
+            self.conn.commit()
+            cur.close()
+            return records
+        else:
+            return []
+
+    def get_row_times(self, td):
+        d_id = self.get_date_id(td)
+        if d_id is not None:
+            cur = self.conn.cursor(dictionary=True)
+            command = f"""SELECT is_productive, start_time, end_time, duration  
+            FROM times
+            WHERE day_id={d_id};"""
+            cur.execute(command)
+            records = []
+            for row in cur.fetchall():
+                if row["is_productive"]:
+                    row["is_productive"] = "Yes"
+                else:
+                    row["is_productive"] = "No"
+                records.append([str(row["start_time"]),
+                               str(row["end_time"]), row["duration"], row["is_productive"]])
+            self.conn.commit()
+            cur.close()
+
+            return records
+        else:
+            return []
 
